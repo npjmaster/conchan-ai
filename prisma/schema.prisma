@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String         @map("password_hash")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  setting       UserSetting?
+  mealPlans     MealPlan[]
+  shoppingLists ShoppingList[]
+
+  @@map("users")
+}
+
+model UserSetting {
+  id               String   @id @default(cuid())
+  userId           String   @unique @map("user_id")
+  familySize       Int      @default(2) @map("family_size")
+  mainDishCount    Int      @default(1) @map("main_dish_count")
+  sideDishCount    Int      @default(1) @map("side_dish_count")
+  breakfastMainDishCount Int @default(1) @map("breakfast_main_dish_count")
+  breakfastSideDishCount Int @default(1) @map("breakfast_side_dish_count")
+  lunchMainDishCount     Int @default(1) @map("lunch_main_dish_count")
+  lunchSideDishCount     Int @default(1) @map("lunch_side_dish_count")
+  dinnerMainDishCount    Int @default(1) @map("dinner_main_dish_count")
+  dinnerSideDishCount    Int @default(1) @map("dinner_side_dish_count")
+  includeBreakfast Boolean  @default(false) @map("include_breakfast")
+  includeLunch     Boolean  @default(false) @map("include_lunch")
+  includeDinner    Boolean  @default(true) @map("include_dinner")
+  allergies        String   @default("")
+  lowSalt          Boolean  @default(false) @map("low_salt")
+  lowSugar         Boolean  @default(false) @map("low_sugar")
+  lowFat           Boolean  @default(false) @map("low_fat")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model MealPlan {
+  id            String        @id @default(cuid())
+  userId        String        @map("user_id")
+  startDate     DateTime      @map("start_date")
+  days          Int
+  status        String        @default("generated")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meals         Meal[]
+  shoppingLists ShoppingList[]
+
+  @@map("meal_plans")
+}
+
+model Meal {
+  id         String   @id @default(cuid())
+  mealPlanId String   @map("meal_plan_id")
+  mealDate   DateTime @map("meal_date")
+  mealType   String   @map("meal_type")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  dishes     Dish[]
+
+  @@map("meals")
+}
+
+model Dish {
+  id          String       @id @default(cuid())
+  mealId      String       @map("meal_id")
+  dishType    String       @map("dish_type")
+  name        String
+  description String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  meal        Meal         @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  recipeLinks RecipeLink[]
+
+  @@map("dishes")
+}
+
+model RecipeLink {
+  id          String   @id @default(cuid())
+  dishId      String   @map("dish_id")
+  serviceName String   @map("service_name")
+  searchUrl   String   @map("search_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  dish        Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@map("recipe_links")
+}
+
+model ShoppingList {
+  id         String             @id @default(cuid())
+  mealPlanId String             @map("meal_plan_id")
+  userId     String             @map("user_id")
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+  mealPlan   MealPlan           @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      ShoppingListItem[]
+
+  @@map("shopping_lists")
+}
+
+model ShoppingListItem {
+  id             String       @id @default(cuid())
+  shoppingListId String       @map("shopping_list_id")
+  name           String
+  amount         String?
+  unit           String?
+  category       String       @default("その他")
+  memo           String?
+  checked        Boolean      @default(false)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+
+  @@map("shopping_list_items")
+}
