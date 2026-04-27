@@ -94,7 +94,7 @@ function extractJson(text: string) {
 async function callOpenAI(prompt: string) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("OpenAI APIキーが未設定です。OPENAI_API_KEYを設定してください。");
+    throw new Error("AI機能が未設定です。");
   }
 
   const response = await fetch("https://api.openai.com/v1/responses", {
@@ -218,12 +218,23 @@ JSON形式:
 - 料理に使わない食材や調味料をingredientsに入れない
 - アレルギー・避けたい食材に該当する料理や食材は出力しない
 - 同じ料理が続きすぎないようにする
+- 同じ条件でも毎回まったく同じ献立にならないよう、一般的な家庭料理の範囲で少し変化をつける
 `;
 
-  const output = await callOpenAI(prompt);
-  const parsed = mealPlanSchema.safeParse(extractJson(output));
-  if (!parsed.success) throw new Error("AIの献立JSON形式が不正です。");
-  return normalizeMealPlan(input, parsed.data);
+  let lastError = new Error("AIの献立JSON形式が不正です。");
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const output = await callOpenAI(prompt);
+    try {
+      const parsed = mealPlanSchema.safeParse(extractJson(output));
+      if (parsed.success) return normalizeMealPlan(input, parsed.data);
+      lastError = new Error("AIの献立JSON形式が不正です。");
+    } catch (error) {
+      lastError = error instanceof Error ? error : lastError;
+    }
+  }
+
+  throw lastError;
 }
 
 export async function generateShoppingList(

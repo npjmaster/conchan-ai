@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { MealPlanView } from "@/components/MealPlanView";
 import { ShoppingListView } from "@/components/ShoppingListView";
 import { authOptions } from "@/lib/auth";
-import { formatDateOnly } from "@/lib/date";
+import { compareMealTypes, formatDateOnly } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
 export default async function MealPlanPage({ params }: { params: Promise<{ id: string }> }) {
@@ -23,6 +23,11 @@ export default async function MealPlanPage({ params }: { params: Promise<{ id: s
   });
 
   if (!mealPlan) redirect("/dashboard");
+  mealPlan.meals.sort(
+    (a, b) =>
+      a.mealDate.getTime() - b.mealDate.getTime() ||
+      compareMealTypes(a.mealType, b.mealType),
+  );
   const shoppingList = mealPlan.shoppingLists[0];
 
   return (
@@ -38,7 +43,7 @@ export default async function MealPlanPage({ params }: { params: Promise<{ id: s
       {shoppingList && (
         <section style={{ marginTop: 24 }}>
           <h2>買い物リスト</h2>
-          <ShoppingListView items={shoppingList.items} />
+          <ShoppingListView items={shoppingList.items} shoppingListId={shoppingList.id} />
         </section>
       )}
     </main>

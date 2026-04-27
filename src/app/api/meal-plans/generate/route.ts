@@ -1,9 +1,10 @@
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateMealPlan, generateShoppingList } from "@/lib/ai";
 import { authOptions } from "@/lib/auth";
-import { parseDateOnly } from "@/lib/date";
+import { compareMealTypes, parseDateOnly } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 import { buildRecipeLinks } from "@/lib/recipeLinks";
 
@@ -12,43 +13,67 @@ const schema = z.object({
   days: z.number().int().min(1).max(7),
 });
 
-export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-  if (!userId) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+function isPrismaError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError ||
+    error instanceof Prisma.PrismaClientUnknownRequestError ||
+    error instanceof Prisma.PrismaClientRustPanicError ||
+    error instanceof Prisma.PrismaClientInitializationError ||
+    error instanceof Prisma.PrismaClientValidationError
+  );
+}
 
-  const body = schema.safeParse(await request.json());
+function generationErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) return "生成に失敗しました。";
+  if (error.message === "AI機能が未設定です。") return error.message;
+  if (error.message.includes("JSON")) return error.message;
+  return "生成に失敗しました。";
+}
+
+export async function POST(request: Request) {
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "入力内容を確認してください。" }, { status: 400 });
+  }
+
+  const body = schema.safeParse(payload);
   if (!body.success) {
     return NextResponse.json({ error: "入力内容を確認してください。" }, { status: 400 });
   }
 
-  const setting = await prisma.userSetting.upsert({
-    where: { userId },
-    update: {},
-    create: { userId },
-  });
-
-  const input = {
-    startDate: body.data.startDate,
-    days: body.data.days,
-    familySize: setting.familySize,
-    mainDishCount: setting.mainDishCount,
-    sideDishCount: setting.sideDishCount,
-    mealDishCounts: {
-      breakfast: { main: setting.breakfastMainDishCount, sides: setting.breakfastSideDishCount },
-      lunch: { main: setting.lunchMainDishCount, sides: setting.lunchSideDishCount },
-      dinner: { main: setting.dinnerMainDishCount, sides: setting.dinnerSideDishCount },
-    },
-    includeBreakfast: setting.includeBreakfast,
-    includeLunch: setting.includeLunch,
-    includeDinner: setting.includeDinner,
-    allergies: setting.allergies,
-    lowSalt: setting.lowSalt,
-    lowSugar: setting.lowSugar,
-    lowFat: setting.lowFat,
-  };
-
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+
+    const setting = await prisma.userSetting.upsert({
+      where: { userId },
+      update: {},
+      create: { userId },
+    });
+
+    const input = {
+      startDate: body.data.startDate,
+      days: body.data.days,
+      familySize: setting.familySize,
+      mainDishCount: setting.mainDishCount,
+      sideDishCount: setting.sideDishCount,
+      mealDishCounts: {
+        breakfast: { main: setting.breakfastMainDishCount, sides: setting.breakfastSideDishCount },
+        lunch: { main: setting.lunchMainDishCount, sides: setting.lunchSideDishCount },
+        dinner: { main: setting.dinnerMainDishCount, sides: setting.dinnerSideDishCount },
+      },
+      includeBreakfast: setting.includeBreakfast,
+      includeLunch: setting.includeLunch,
+      includeDinner: setting.includeDinner,
+      allergies: setting.allergies,
+      lowSalt: setting.lowSalt,
+      lowSugar: setting.lowSugar,
+      lowFat: setting.lowFat,
+    };
+
     const mealPlanJson = await generateMealPlan(input);
     const shoppingListJson = await generateShoppingList(mealPlanJson, setting.familySize);
 
@@ -103,10 +128,19 @@ export async function POST(request: Request) {
       },
     });
 
+    mealPlan.meals.sort(
+      (a, b) =>
+        a.mealDate.getTime() - b.mealDate.getTime() ||
+        compareMealTypes(a.mealType, b.mealType),
+    );
+
     return NextResponse.json({ mealPlan });
   } catch (error) {
+    if (isPrismaError(error)) {
+      return NextResponse.json({ error: "現在利用できません。" }, { status: 503 });
+    }
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "生成に失敗しました。" },
+      { error: generationErrorMessage(error) },
       { status: 502 },
     );
   }

@@ -14,8 +14,22 @@ const schema = z.object({
   lowFat: z.boolean().default(false),
 });
 
+function generationErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) return "生成に失敗しました。";
+  if (error.message === "AI機能が未設定です。") return error.message;
+  if (error.message.includes("JSON")) return error.message;
+  return "生成に失敗しました。";
+}
+
 export async function POST(request: Request) {
-  const body = schema.safeParse(await request.json());
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "入力内容を確認してください。" }, { status: 400 });
+  }
+
+  const body = schema.safeParse(payload);
   if (!body.success) {
     return NextResponse.json({ error: "入力内容を確認してください。" }, { status: 400 });
   }
@@ -48,7 +62,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ mealPlan, shoppingList, recipeLinks });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "生成に失敗しました。" },
+      { error: generationErrorMessage(error) },
       { status: 502 },
     );
   }

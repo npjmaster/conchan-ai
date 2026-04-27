@@ -9,6 +9,7 @@ export default function GeneratePage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

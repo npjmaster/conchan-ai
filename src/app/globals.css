@@ -72,6 +72,7 @@ a {
 .hero-logo {
   width: min(420px, 100%);
   height: auto;
+  justify-self: center;
 }
 
 .nav {
@@ -105,6 +106,33 @@ button.primary {
 
 .button.ghost {
   background: transparent;
+}
+
+.panel-button {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  align-content: center;
+  min-height: 88px;
+  text-align: left;
+  color: var(--text);
+}
+
+.panel-button span {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.panel-button small {
+  color: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.panel-button-primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-dark);
 }
 
 .container {

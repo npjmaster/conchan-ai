@@ -15,37 +15,48 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const body = schema.safeParse(await request.json());
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "入力内容を確認してください。" }, { status: 400 });
+  }
+
+  const body = schema.safeParse(payload);
   if (!body.success) {
     return NextResponse.json({ error: "入力内容を確認してください。" }, { status: 400 });
   }
 
-  const email = body.data.email.toLowerCase().trim();
-  const exists = await prisma.user.findUnique({ where: { email } });
-  if (exists) {
-    return NextResponse.json({ error: "このメールアドレスは登録済みです。" }, { status: 409 });
-  }
+  try {
+    const email = body.data.email.toLowerCase().trim();
+    const exists = await prisma.user.findUnique({ where: { email } });
+    if (exists) {
+      return NextResponse.json({ error: "このメールアドレスは登録済みです。" }, { status: 409 });
+    }
 
-  const passwordHash = await bcrypt.hash(body.data.password, 12);
-  const user = await prisma.user.create({
-    data: {
-      email,
-      passwordHash,
-      setting: {
-        create: {
-          familySize: body.data.familySize,
-          mainDishCount: body.data.mainDishCount,
-          sideDishCount: body.data.sideDishCount,
-          includeBreakfast: false,
-          includeLunch: false,
-          includeDinner: true,
-          lowSalt: body.data.lowSalt,
-          lowSugar: body.data.lowSugar,
-          lowFat: body.data.lowFat,
+    const passwordHash = await bcrypt.hash(body.data.password, 12);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        setting: {
+          create: {
+            familySize: body.data.familySize,
+            mainDishCount: body.data.mainDishCount,
+            sideDishCount: body.data.sideDishCount,
+            includeBreakfast: false,
+            includeLunch: false,
+            includeDinner: true,
+            lowSalt: body.data.lowSalt,
+            lowSugar: body.data.lowSugar,
+            lowFat: body.data.lowFat,
+          },
         },
       },
-    },
-  });
+    });
 
-  return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });
+    return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });
+  } catch {
+    return NextResponse.json({ error: "現在利用できません。" }, { status: 503 });
+  }
 }

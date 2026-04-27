@@ -29,22 +29,30 @@ async function getUserId() {
 }
 
 export async function GET() {
-  const userId = await getUserId();
-  if (!userId) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  try {
+    const userId = await getUserId();
+    if (!userId) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
 
-  const setting = await prisma.userSetting.upsert({
-    where: { userId },
-    update: {},
-    create: { userId },
-  });
-  return NextResponse.json({ setting });
+    const setting = await prisma.userSetting.upsert({
+      where: { userId },
+      update: {},
+      create: { userId },
+    });
+    return NextResponse.json({ setting });
+  } catch {
+    return NextResponse.json({ error: "現在利用できません。" }, { status: 503 });
+  }
 }
 
 export async function PUT(request: Request) {
-  const userId = await getUserId();
-  if (!userId) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "入力内容を確認してください。" }, { status: 400 });
+  }
 
-  const body = schema.safeParse(await request.json());
+  const body = schema.safeParse(payload);
   if (!body.success) {
     return NextResponse.json({ error: "入力内容を確認してください。" }, { status: 400 });
   }
@@ -53,11 +61,18 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "対象食事を1つ以上選択してください。" }, { status: 400 });
   }
 
-  const setting = await prisma.userSetting.upsert({
-    where: { userId },
-    update: body.data,
-    create: { userId, ...body.data },
-  });
+  try {
+    const userId = await getUserId();
+    if (!userId) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
 
-  return NextResponse.json({ setting });
+    const setting = await prisma.userSetting.upsert({
+      where: { userId },
+      update: body.data,
+      create: { userId, ...body.data },
+    });
+
+    return NextResponse.json({ setting });
+  } catch {
+    return NextResponse.json({ error: "現在利用できません。" }, { status: 503 });
+  }
 }
