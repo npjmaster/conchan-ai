@@ -8,11 +8,11 @@ const schema = z.object({
   familySize: z.number().int().min(1).max(10),
   mainDishCount: z.number().int().min(1).max(3),
   sideDishCount: z.number().int().min(0).max(5),
-  breakfastMainDishCount: z.number().int().min(1).max(3),
+  breakfastMainDishCount: z.number().int().min(0).max(3),
   breakfastSideDishCount: z.number().int().min(0).max(5),
-  lunchMainDishCount: z.number().int().min(1).max(3),
+  lunchMainDishCount: z.number().int().min(0).max(3),
   lunchSideDishCount: z.number().int().min(0).max(5),
-  dinnerMainDishCount: z.number().int().min(1).max(3),
+  dinnerMainDishCount: z.number().int().min(0).max(3),
   dinnerSideDishCount: z.number().int().min(0).max(5),
   includeBreakfast: z.boolean(),
   includeLunch: z.boolean(),
@@ -36,7 +36,16 @@ export async function GET() {
     const setting = await prisma.userSetting.upsert({
       where: { userId },
       update: {},
-      create: { userId },
+      create: {
+        userId,
+        sideDishCount: 0,
+        breakfastMainDishCount: 0,
+        breakfastSideDishCount: 0,
+        lunchMainDishCount: 0,
+        lunchSideDishCount: 0,
+        dinnerMainDishCount: 1,
+        dinnerSideDishCount: 1,
+      },
     });
     return NextResponse.json({ setting });
   } catch {

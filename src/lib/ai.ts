@@ -35,30 +35,30 @@ const shoppingListSchema = z.object({
 
 const condiments = ["しょうゆ", "醤油", "みりん", "味噌", "砂糖", "塩", "こしょう", "油", "酢", "酒"];
 const ingredientRules = [
-  { match: "鶏むね", name: "鶏むね肉", amount: 120, unit: "g", category: "肉・魚" },
-  { match: "鶏", name: "鶏肉", amount: 120, unit: "g", category: "肉・魚" },
-  { match: "さば", name: "さば", amount: 1, unit: "切れ", category: "肉・魚" },
-  { match: "サバ", name: "さば", amount: 1, unit: "切れ", category: "肉・魚" },
-  { match: "鮭", name: "鮭", amount: 1, unit: "切れ", category: "肉・魚" },
-  { match: "豚", name: "豚肉", amount: 100, unit: "g", category: "肉・魚" },
-  { match: "白身魚", name: "白身魚", amount: 1, unit: "切れ", category: "肉・魚" },
-  { match: "豆腐", name: "豆腐", amount: 1, unit: "丁", category: "大豆・卵" },
-  { match: "卵", name: "卵", amount: 1, unit: "個", category: "大豆・卵" },
-  { match: "納豆", name: "納豆", amount: 1, unit: "パック", category: "大豆・卵" },
+  { match: "鶏むね", name: "鶏むね肉", amount: 120, unit: "g", category: "肉類" },
+  { match: "鶏", name: "鶏肉", amount: 120, unit: "g", category: "肉類" },
+  { match: "さば", name: "さば", amount: 1, unit: "切れ", category: "魚介類" },
+  { match: "サバ", name: "さば", amount: 1, unit: "切れ", category: "魚介類" },
+  { match: "鮭", name: "鮭", amount: 1, unit: "切れ", category: "魚介類" },
+  { match: "豚", name: "豚肉", amount: 100, unit: "g", category: "肉類" },
+  { match: "白身魚", name: "白身魚", amount: 1, unit: "切れ", category: "魚介類" },
+  { match: "豆腐", name: "豆腐", amount: 1, unit: "丁", category: "豆類・豆製品" },
+  { match: "卵", name: "卵", amount: 1, unit: "個", category: "卵類" },
+  { match: "納豆", name: "納豆", amount: 1, unit: "パック", category: "豆類・豆製品" },
   { match: "小松菜", name: "小松菜", amount: 0.5, unit: "束", category: "野菜" },
   { match: "にんじん", name: "にんじん", amount: 0.5, unit: "本", category: "野菜" },
   { match: "きゅうり", name: "きゅうり", amount: 1, unit: "本", category: "野菜" },
-  { match: "わかめ", name: "わかめ", amount: 5, unit: "g", category: "乾物" },
+  { match: "わかめ", name: "わかめ", amount: 5, unit: "g", category: "海藻類" },
   { match: "かぼちゃ", name: "かぼちゃ", amount: 0.25, unit: "個", category: "野菜" },
   { match: "トマト", name: "トマト", amount: 1, unit: "個", category: "野菜" },
   { match: "ほうれん草", name: "ほうれん草", amount: 0.5, unit: "束", category: "野菜" },
-  { match: "きのこ", name: "しめじ", amount: 1, unit: "パック", category: "野菜" },
-  { match: "しめじ", name: "しめじ", amount: 1, unit: "パック", category: "野菜" },
+  { match: "きのこ", name: "しめじ", amount: 1, unit: "パック", category: "きのこ類" },
+  { match: "しめじ", name: "しめじ", amount: 1, unit: "パック", category: "きのこ類" },
   { match: "ごはん", name: "米", amount: 0.5, unit: "合", category: "米・麺" },
   { match: "丼", name: "米", amount: 0.5, unit: "合", category: "米・麺" },
   { match: "うどん", name: "うどん", amount: 1, unit: "玉", category: "米・麺" },
   { match: "サンド", name: "食パン", amount: 2, unit: "枚", category: "パン" },
-  { match: "ツナ", name: "ツナ缶", amount: 0.5, unit: "缶", category: "肉・魚" },
+  { match: "ツナ", name: "ツナ缶", amount: 0.5, unit: "缶", category: "魚介類" },
 ];
 
 type MealPlanDay = MealPlanJson["meal_plan"][number];
@@ -111,6 +111,19 @@ async function callOpenAI(prompt: string) {
   });
 
   if (!response.ok) {
+    let code = "";
+    try {
+      const data = await response.json();
+      code = typeof data.error?.code === "string" ? data.error.code : "";
+    } catch {
+      // Ignore malformed error bodies and fall back to the HTTP status.
+    }
+    if (response.status === 429 || code === "insufficient_quota") {
+      throw new Error("AI生成の利用上限に達しています。OpenAIのプランまたは請求設定を確認してください。");
+    }
+    if (response.status === 401) {
+      throw new Error("OpenAI APIキーを確認してください。");
+    }
     throw new Error(`OpenAI APIの呼び出しに失敗しました。ステータス: ${response.status}`);
   }
 

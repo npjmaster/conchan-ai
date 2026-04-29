@@ -5,10 +5,10 @@ export default function HomePage() {
   return (
     <main className="container">
       <section className="hero">
-        <Image alt="献ちゃんAI" className="hero-logo" height={120} priority src="/logo_conchan3.png" width={420} />
+        <Image alt="献ちゃんAI" className="hero-logo" height={120} priority src="/logo_conchan5.png" width={420} />
         <p className="lead">
-          家族の人数や食事スタイルに合わせて、献立と買い物リストを作ります。
-          レシピ本文は保存せず、クックパッドとクラシルの検索リンクだけを案内します。
+          家族の人数や食事スタイルに合わせて、最適な献立を提案します。
+          気になる料理はレシピもすぐチェックでき、買い物リストも作成できます。
         </p>
         <div className="actions">
           <Link className="button" href="/register">

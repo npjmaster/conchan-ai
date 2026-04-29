@@ -26,6 +26,9 @@ function isPrismaError(error: unknown) {
 function generationErrorMessage(error: unknown) {
   if (!(error instanceof Error)) return "生成に失敗しました。";
   if (error.message === "AI機能が未設定です。") return error.message;
+  if (error.message.includes("AI生成の利用上限")) return error.message;
+  if (error.message.includes("OpenAI APIキー")) return error.message;
+  if (error.message.includes("OpenAI APIの呼び出し")) return error.message;
   if (error.message.includes("JSON")) return error.message;
   return "生成に失敗しました。";
 }
@@ -51,7 +54,16 @@ export async function POST(request: Request) {
     const setting = await prisma.userSetting.upsert({
       where: { userId },
       update: {},
-      create: { userId },
+      create: {
+        userId,
+        sideDishCount: 0,
+        breakfastMainDishCount: 0,
+        breakfastSideDishCount: 0,
+        lunchMainDishCount: 0,
+        lunchSideDishCount: 0,
+        dinnerMainDishCount: 1,
+        dinnerSideDishCount: 1,
+      },
     });
 
     const input = {
@@ -136,6 +148,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ mealPlan });
   } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Meal plan generation failed", error);
+    }
     if (isPrismaError(error)) {
       return NextResponse.json({ error: "現在利用できません。" }, { status: 503 });
     }

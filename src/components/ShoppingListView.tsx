@@ -11,6 +11,54 @@ type Item = {
   checked?: boolean;
 };
 
+const categoryOrder = [
+  "肉類",
+  "魚介類",
+  "卵類",
+  "野菜",
+  "きのこ類",
+  "豆類・豆製品",
+  "海藻類",
+  "種実類",
+  "果物",
+];
+
+function normalizeCategory(item: Item) {
+  const category = item.category;
+  const name = item.name;
+
+  if (category === "肉類" || category === "肉・魚") {
+    if (/[魚鮭鯖さばサバまぐろツナえび海老いかイカたこタコ貝]/.test(name)) return "魚介類";
+    return "肉類";
+  }
+  if (category === "魚介類") return "魚介類";
+  if (category === "大豆・卵") {
+    if (name.includes("卵") || name.includes("玉子")) return "卵類";
+    return "豆類・豆製品";
+  }
+  if (category === "卵類") return "卵類";
+  if (category === "豆類・豆製品") return "豆類・豆製品";
+  if (category === "乾物" && /わかめ|昆布|ひじき|海苔|のり/.test(name)) return "海藻類";
+  if (category === "海藻類") return "海藻類";
+  if (category === "野菜" && /きのこ|しめじ|えのき|しいたけ|椎茸|まいたけ|エリンギ/.test(name)) return "きのこ類";
+  if (category === "きのこ類") return "きのこ類";
+  if (category === "種実類") return "種実類";
+  if (category === "果物") return "果物";
+  if (category === "野菜") return "野菜";
+  return category;
+}
+
+function compareCategories(a: string, b: string) {
+  const aIndex = categoryOrder.indexOf(a);
+  const bIndex = categoryOrder.indexOf(b);
+  if (aIndex !== -1 || bIndex !== -1) {
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  }
+  return a.localeCompare(b, "ja");
+}
+
 export function ShoppingListView({
   items,
   shoppingListId,
@@ -45,19 +93,21 @@ export function ShoppingListView({
   }
 
   const groups = items.reduce<Record<string, Item[]>>((acc, item) => {
-    acc[item.category] ??= [];
-    acc[item.category].push(item);
+    const category = normalizeCategory(item);
+    acc[category] ??= [];
+    acc[category].push(item);
     return acc;
   }, {});
+  const sortedGroups = Object.entries(groups).sort(([a], [b]) => compareCategories(a, b));
 
   return (
     <>
       {error && <p className="message">{error}</p>}
       <div className="grid">
-        {Object.entries(groups).map(([category, categoryItems]) => (
+        {sortedGroups.map(([category, categoryItems]) => (
           <section className="shopping-section" key={category}>
             <h3>{category}</h3>
-            {categoryItems.map((item) => {
+            {categoryItems.toSorted((a, b) => a.name.localeCompare(b.name, "ja")).map((item) => {
               const key = item.id ?? item.name;
               return (
                 <label className="shopping-item" key={key}>

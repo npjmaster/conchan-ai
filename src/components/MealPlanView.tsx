@@ -57,18 +57,17 @@ function normalizeFromApi(mealPlan: {
 }
 
 function linksFor(dish: Dish): RecipeLink[] {
-  return (
-    dish.recipeLinks ?? [
-      {
-        serviceName: "クックパッド",
-        searchUrl: `https://cookpad.com/search/${encodeURIComponent(dish.name)}`,
-      },
-      {
-        serviceName: "クラシル",
-        searchUrl: `https://www.kurashiru.com/search?query=${encodeURIComponent(dish.name)}`,
-      },
-    ]
-  );
+  if (dish.recipeLinks?.length) return dish.recipeLinks;
+  return [
+    {
+      serviceName: "クックパッド",
+      searchUrl: `https://cookpad.com/search/${encodeURIComponent(dish.name)}`,
+    },
+    {
+      serviceName: "クラシル",
+      searchUrl: `https://www.kurashiru.com/search?query=${encodeURIComponent(dish.name)}`,
+    },
+  ];
 }
 
 export function MealPlanView({ mealPlan }: { mealPlan: { meals?: Meal[]; meal_plan?: Day[] } }) {

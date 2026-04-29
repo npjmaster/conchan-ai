@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <header className="topbar">
             <div className="topbar-inner">
               <Link className="brand" href="/">
-                <Image alt="献ちゃんAI" height={44} priority src="/logo_conchan3.png" width={180} />
+                <Image alt="献ちゃんAI" height={44} priority src="/logo_conchan5.png" width={180} />
               </Link>
               <nav className="nav">
                 {session?.user ? (
