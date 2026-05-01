@@ -11,6 +11,8 @@ type Item = {
   checked?: boolean;
 };
 
+const condimentCategory = "調味料";
+
 const categoryOrder = [
   "肉類",
   "魚介類",
@@ -21,14 +23,13 @@ const categoryOrder = [
   "海藻類",
   "米・麺",
   "その他",
-  "調味料",
 ];
 
 function normalizeCategory(item: Item) {
   const category = item.category;
   const name = item.name;
 
-  if (category === "調味料") return "調味料";
+  if (category === condimentCategory || category.includes("調味")) return condimentCategory;
   if (category === "肉類" || category === "肉・魚") {
     if (/[魚鮭鯖さばサバまぐろマグロツナえび海老いかイカたこタコ貝]/.test(name)) return "魚介類";
     return "肉類";
@@ -51,6 +52,9 @@ function normalizeCategory(item: Item) {
 }
 
 function compareCategories(a: string, b: string) {
+  if (a === condimentCategory && b !== condimentCategory) return 1;
+  if (b === condimentCategory && a !== condimentCategory) return -1;
+
   const aIndex = categoryOrder.indexOf(a);
   const bIndex = categoryOrder.indexOf(b);
   if (aIndex !== -1 || bIndex !== -1) {

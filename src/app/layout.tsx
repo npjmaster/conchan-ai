@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
-import { SignOutButton } from "@/components/SignOutButton";
+import { HeaderNav } from "@/components/HeaderNav";
 import { authOptions } from "@/lib/auth";
 import "./globals.css";
 
@@ -23,21 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Link className="brand" href="/">
                 <Image alt="こんちゃんAI" height={44} priority src="/logo_conchan5.png" width={180} />
               </Link>
-              <nav className="nav">
-                {session?.user ? (
-                  <>
-                    <Link href="/dashboard">マイページ</Link>
-                    <Link href="/generate">献立作成</Link>
-                    <Link href="/settings">設定</Link>
-                    <SignOutButton />
-                  </>
-                ) : (
-                  <>
-                    <Link href="/register">ユーザー登録</Link>
-                    <Link href="/login">ログイン</Link>
-                  </>
-                )}
-              </nav>
+              <HeaderNav isLoggedIn={Boolean(session?.user)} />
             </div>
           </header>
           {children}

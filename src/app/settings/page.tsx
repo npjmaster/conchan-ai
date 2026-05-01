@@ -199,7 +199,7 @@ export default function SettingsPage() {
           </label>
           <div className="checks">
             <span className="label">対象食事</span>
-            <label className="check">
+            <div className="check">
               <input
                 checked={mealEnabled.breakfast}
                 id="includeBreakfast"
@@ -207,9 +207,9 @@ export default function SettingsPage() {
                 onChange={(event) => updateMealEnabled("breakfast", event.currentTarget.checked)}
                 type="checkbox"
               />
-              朝食
-            </label>
-            <label className="check">
+              <span>朝食</span>
+            </div>
+            <div className="check">
               <input
                 checked={mealEnabled.lunch}
                 id="includeLunch"
@@ -217,9 +217,9 @@ export default function SettingsPage() {
                 onChange={(event) => updateMealEnabled("lunch", event.currentTarget.checked)}
                 type="checkbox"
               />
-              昼食
-            </label>
-            <label className="check">
+              <span>昼食</span>
+            </div>
+            <div className="check">
               <input
                 checked={mealEnabled.dinner}
                 id="includeDinner"
@@ -227,8 +227,8 @@ export default function SettingsPage() {
                 onChange={(event) => updateMealEnabled("dinner", event.currentTarget.checked)}
                 type="checkbox"
               />
-              夕食
-            </label>
+              <span>夕食</span>
+            </div>
           </div>
           <div className="meal-count-grid">
             <label className="field">
@@ -258,18 +258,18 @@ export default function SettingsPage() {
           </div>
           <div className="checks">
             <span className="label">健康オプション</span>
-            <label className="check">
+            <div className="check">
               <input checked={setting.lowSalt} id="lowSalt" name="lowSalt" onChange={(event) => updateSetting({ lowSalt: event.currentTarget.checked })} type="checkbox" />
-              減塩
-            </label>
-            <label className="check">
+              <span>減塩</span>
+            </div>
+            <div className="check">
               <input checked={setting.lowSugar} id="lowSugar" name="lowSugar" onChange={(event) => updateSetting({ lowSugar: event.currentTarget.checked })} type="checkbox" />
-              糖質控えめ
-            </label>
-            <label className="check">
+              <span>糖質控えめ</span>
+            </div>
+            <div className="check">
               <input checked={setting.lowFat} id="lowFat" name="lowFat" onChange={(event) => updateSetting({ lowFat: event.currentTarget.checked })} type="checkbox" />
-              脂質控えめ
-            </label>
+              <span>脂質控えめ</span>
+            </div>
           </div>
           <label className="field">
             アレルギー・避けたい食材
