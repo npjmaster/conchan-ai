@@ -36,7 +36,7 @@ export default function RegisterPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "登録に失敗しました。");
       const result = await signIn("credentials", { email, password, redirect: false });
-      if (result?.error) throw new Error("登録後ログインに失敗しました。");
+      if (result?.error) throw new Error("登録後のログインに失敗しました。");
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -61,7 +61,7 @@ export default function RegisterPage() {
           </label>
           <label className="field">
             家族人数
-            <input defaultValue={2} max={10} min={1} name="familySize" type="number" />
+            <input defaultValue={2} max={100} min={1} name="familySize" type="number" />
           </label>
           <label className="field">
             主菜数
@@ -69,7 +69,7 @@ export default function RegisterPage() {
           </label>
           <label className="field">
             副菜数
-            <input defaultValue={1} max={5} min={0} name="sideDishCount" type="number" />
+            <input defaultValue={1} max={10} min={0} name="sideDishCount" type="number" />
           </label>
           <div className="checks">
             <label className="check">
@@ -83,7 +83,9 @@ export default function RegisterPage() {
             </label>
           </div>
           {error && <p className="message">{error}</p>}
-          <SubmitButton pending={pending}>登録して始める</SubmitButton>
+          <SubmitButton pending={pending} pendingText="登録中">
+            登録して始める
+          </SubmitButton>
         </form>
       </section>
     </main>

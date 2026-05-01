@@ -18,7 +18,7 @@ export default function TrialPage() {
     setError("");
     const count = Number(localStorage.getItem("trial_count") ?? "0");
     if (count >= 3) {
-      setError("お試し生成は最大3回までです。登録すると最大7日分まで作れます。");
+      setError("お試しはここまでです。無料登録すると、もっとたくさんの献立が作れます。");
       return;
     }
 
@@ -39,11 +39,11 @@ export default function TrialPage() {
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "生成に失敗しました。");
+      if (!response.ok) throw new Error(data.error ?? "献立作成に失敗しました。");
       localStorage.setItem("trial_count", String(count + 1));
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "生成に失敗しました。");
+      setError(err instanceof Error ? err.message : "献立作成に失敗しました。");
     } finally {
       setPending(false);
     }
@@ -51,14 +51,14 @@ export default function TrialPage() {
 
   return (
     <main className="container">
-      <h1 className="page-title">お試し献立生成</h1>
-      <p className="lead">未登録でも夕食1食分を試せます。回数はこのブラウザで最大3回です。</p>
+      <h1 className="page-title">1食分の献立を提案</h1>
+      <p className="lead">未登録でも最大3回、1食分の献立を考えます。</p>
 
       <section className="panel">
         <form className="form" onSubmit={onSubmit}>
           <label className="field">
             家族人数
-            <input defaultValue={2} max={10} min={1} name="familySize" type="number" />
+            <input defaultValue={2} max={100} min={1} name="familySize" type="number" />
           </label>
           <label className="field">
             主菜数
@@ -66,7 +66,7 @@ export default function TrialPage() {
           </label>
           <label className="field">
             副菜数
-            <input defaultValue={1} max={5} min={0} name="sideDishCount" type="number" />
+            <input defaultValue={1} max={10} min={0} name="sideDishCount" type="number" />
           </label>
           <div className="checks">
             <label className="check">
@@ -81,18 +81,20 @@ export default function TrialPage() {
           </div>
           <label className="field">
             アレルギー・避けたい食材
-            <input name="allergies" placeholder="例：えび、そば、卵" type="text" />
+            <input name="allergies" placeholder="例：えび、そば、牛乳" type="text" />
           </label>
           {error && <p className="message">{error}</p>}
-          <SubmitButton pending={pending}>1食分を生成する</SubmitButton>
+          <SubmitButton pending={pending} pendingText="献立を考えています...">
+            1食分を考えます
+          </SubmitButton>
         </form>
       </section>
 
       {result && (
-        <section className="grid" style={{ marginTop: 20 }}>
-          <h2>生成結果</h2>
+        <section className="grid result-section">
+          <h2>おすすめの献立</h2>
           <MealPlanView mealPlan={result.mealPlan} />
-          <h2>買い物リスト</h2>
+          <h2>食材リスト</h2>
           <ShoppingListView items={result.shoppingList.shopping_list} />
         </section>
       )}

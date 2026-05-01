@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { addDays, mealTypeOrder } from "./date";
-import type { GenerateInput, MealPlanJson, ShoppingListJson } from "./types";
+import type { GenerateInput, MealPlanJson, ShoppingItem, ShoppingListJson } from "./types";
 
 const shoppingItemSchema = z.object({
   name: z.string().min(1),
@@ -14,6 +14,7 @@ const dishSchema = z.object({
   name: z.string().min(1),
   ingredients: z.array(shoppingItemSchema).optional(),
 });
+
 const mealPlanSchema = z.object({
   meal_plan: z.array(
     z.object({
@@ -33,18 +34,39 @@ const shoppingListSchema = z.object({
   shopping_list: z.array(shoppingItemSchema),
 });
 
-const condiments = ["しょうゆ", "醤油", "みりん", "味噌", "砂糖", "塩", "こしょう", "油", "酢", "酒"];
+const condimentNames = [
+  "しょうゆ",
+  "醤油",
+  "みりん",
+  "味噌",
+  "砂糖",
+  "塩",
+  "こしょう",
+  "胡椒",
+  "酢",
+  "酒",
+  "料理酒",
+  "だし",
+  "ごま油",
+  "油",
+  "オリーブオイル",
+  "マヨネーズ",
+  "ケチャップ",
+  "ソース",
+  "カレー粉",
+];
+
 const ingredientRules = [
-  { match: "鶏むね", name: "鶏むね肉", amount: 120, unit: "g", category: "肉類" },
   { match: "鶏", name: "鶏肉", amount: 120, unit: "g", category: "肉類" },
+  { match: "豚", name: "豚肉", amount: 120, unit: "g", category: "肉類" },
+  { match: "牛", name: "牛肉", amount: 120, unit: "g", category: "肉類" },
+  { match: "鮭", name: "鮭", amount: 1, unit: "切れ", category: "魚介類" },
   { match: "さば", name: "さば", amount: 1, unit: "切れ", category: "魚介類" },
   { match: "サバ", name: "さば", amount: 1, unit: "切れ", category: "魚介類" },
-  { match: "鮭", name: "鮭", amount: 1, unit: "切れ", category: "魚介類" },
-  { match: "豚", name: "豚肉", amount: 100, unit: "g", category: "肉類" },
-  { match: "白身魚", name: "白身魚", amount: 1, unit: "切れ", category: "魚介類" },
-  { match: "豆腐", name: "豆腐", amount: 1, unit: "丁", category: "豆類・豆製品" },
+  { match: "魚", name: "魚", amount: 1, unit: "切れ", category: "魚介類" },
   { match: "卵", name: "卵", amount: 1, unit: "個", category: "卵類" },
-  { match: "納豆", name: "納豆", amount: 1, unit: "パック", category: "豆類・豆製品" },
+  { match: "豆腐", name: "豆腐", amount: 0.5, unit: "丁", category: "豆・豆製品" },
+  { match: "納豆", name: "納豆", amount: 1, unit: "パック", category: "豆・豆製品" },
   { match: "小松菜", name: "小松菜", amount: 0.5, unit: "束", category: "野菜" },
   { match: "にんじん", name: "にんじん", amount: 0.5, unit: "本", category: "野菜" },
   { match: "きゅうり", name: "きゅうり", amount: 1, unit: "本", category: "野菜" },
@@ -52,12 +74,12 @@ const ingredientRules = [
   { match: "かぼちゃ", name: "かぼちゃ", amount: 0.25, unit: "個", category: "野菜" },
   { match: "トマト", name: "トマト", amount: 1, unit: "個", category: "野菜" },
   { match: "ほうれん草", name: "ほうれん草", amount: 0.5, unit: "束", category: "野菜" },
-  { match: "きのこ", name: "しめじ", amount: 1, unit: "パック", category: "きのこ類" },
+  { match: "きのこ", name: "きのこ", amount: 1, unit: "パック", category: "きのこ類" },
   { match: "しめじ", name: "しめじ", amount: 1, unit: "パック", category: "きのこ類" },
-  { match: "ごはん", name: "米", amount: 0.5, unit: "合", category: "米・麺" },
+  { match: "ご飯", name: "米", amount: 0.5, unit: "合", category: "米・麺" },
   { match: "丼", name: "米", amount: 0.5, unit: "合", category: "米・麺" },
   { match: "うどん", name: "うどん", amount: 1, unit: "玉", category: "米・麺" },
-  { match: "サンド", name: "食パン", amount: 2, unit: "枚", category: "パン" },
+  { match: "サンド", name: "食パン", amount: 2, unit: "枚", category: "米・麺" },
   { match: "ツナ", name: "ツナ缶", amount: 0.5, unit: "缶", category: "魚介類" },
 ];
 
@@ -68,12 +90,14 @@ function isMeal(value: MealPlanMeal | undefined): value is MealPlanMeal {
   return Boolean(value);
 }
 
+function isCondiment(item: Pick<ShoppingItem, "name" | "category">) {
+  return item.category === "調味料" || condimentNames.some((name) => item.name.includes(name));
+}
+
 function normalizeShoppingList(data: ShoppingListJson): ShoppingListJson {
   return {
     shopping_list: data.shopping_list.map((item) => {
-      const isCondiment =
-        item.category === "調味料" || condiments.some((name) => item.name.includes(name));
-      if (!isCondiment) return item;
+      if (!isCondiment(item)) return item;
       return { ...item, category: "調味料", amount: undefined, unit: undefined };
     }),
   };
@@ -116,7 +140,7 @@ async function callOpenAI(prompt: string) {
       const data = await response.json();
       code = typeof data.error?.code === "string" ? data.error.code : "";
     } catch {
-      // Ignore malformed error bodies and fall back to the HTTP status.
+      // Fall back to the HTTP status below.
     }
     if (response.status === 429 || code === "insufficient_quota") {
       throw new Error("AI生成の利用上限に達しています。OpenAIのプランまたは請求設定を確認してください。");
@@ -165,6 +189,21 @@ function normalizeMealPlan(input: GenerateInput, data: MealPlanJson): MealPlanJs
   return { meal_plan: days };
 }
 
+function condimentsFromDishName(dishName: string): ShoppingItem[] {
+  const items = new Map<string, ShoppingItem>();
+  const add = (name: string) => items.set(name, { name, category: "調味料" });
+
+  if (dishName.includes("味噌") || dishName.includes("みそ")) add("味噌");
+  if (dishName.includes("照り焼き") || dishName.includes("煮") || dishName.includes("丼")) {
+    add("しょうゆ");
+    add("みりん");
+  }
+  if (dishName.includes("酢") || dishName.includes("南蛮")) add("酢");
+  if (dishName.includes("炒め")) add("油");
+  if (dishName.includes("カレー")) add("カレー粉");
+  return Array.from(items.values());
+}
+
 function ingredientsFromDishName(dishName: string, familySize: number) {
   const items = ingredientRules
     .filter((rule) => dishName.includes(rule.match))
@@ -178,22 +217,28 @@ function ingredientsFromDishName(dishName: string, familySize: number) {
 }
 
 function buildShoppingListFromPlan(plan: MealPlanJson, familySize: number): ShoppingListJson {
-  const items = new Map<string, { name: string; amount?: string; unit?: string; category: string; memo?: string }>();
-  const add = (item: { name: string; amount?: string; unit?: string; category: string; memo?: string }) => {
-    const key = `${item.category}:${item.name}:${item.unit ?? ""}`;
+  const items = new Map<string, ShoppingItem>();
+  const add = (item: ShoppingItem) => {
+    const normalized = isCondiment(item)
+      ? { ...item, category: "調味料", amount: undefined, unit: undefined }
+      : item;
+    const key = `${normalized.category}:${normalized.name}:${normalized.unit ?? ""}`;
     const current = items.get(key);
-    const amount = Number(item.amount);
-    if (current && item.amount && current.amount && !Number.isNaN(amount) && !Number.isNaN(Number(current.amount))) {
+    const amount = Number(normalized.amount);
+    if (current && normalized.amount && current.amount && !Number.isNaN(amount) && !Number.isNaN(Number(current.amount))) {
       items.set(key, { ...current, amount: String(Number(current.amount) + amount) });
       return;
     }
-    if (!current) items.set(key, item);
+    if (!current) items.set(key, normalized);
   };
 
   for (const day of plan.meal_plan) {
     for (const meal of day.meals) {
       for (const dish of [...meal.main, ...meal.sides]) {
         for (const item of dish.ingredients?.length ? dish.ingredients : ingredientsFromDishName(dish.name, familySize)) {
+          add(item);
+        }
+        for (const item of condimentsFromDishName(dish.name)) {
           add(item);
         }
       }
@@ -206,6 +251,7 @@ function buildShoppingListFromPlan(plan: MealPlanJson, familySize: number): Shop
 export async function generateMealPlan(input: GenerateInput): Promise<MealPlanJson> {
   const prompt = `
 あなたは家庭向け献立作成AIです。必ずJSONのみを返してください。説明文、Markdown、補足は禁止です。
+
 JSON形式:
 {"meal_plan":[{"date":"YYYY-MM-DD","meals":[{"type":"breakfast","main":[{"name":"主菜名","ingredients":[{"name":"食材名","amount":"分量","unit":"単位","category":"カテゴリ"}]}],"sides":[{"name":"副菜名","ingredients":[{"name":"食材名","amount":"分量","unit":"単位","category":"カテゴリ"}]}]}]}]}
 
@@ -227,11 +273,11 @@ JSON形式:
 - 脂質控えめ: ${input.lowFat}
 - 有効な食事だけを朝食、昼食、夕食の順に出力する
 - dateは開始日から日数分をYYYY-MM-DDで出力する
-- 各料理のingredientsには、その料理に実際に使う主要食材だけを入れる
-- 料理に使わない食材や調味料をingredientsに入れない
+- ingredientsには料理に使う主な食材と調味料を入れる
+- 調味料のcategoryは必ず「調味料」にし、amountとunitは空にする
+- 料理に使わない食材はingredientsに入れない
 - アレルギー・避けたい食材に該当する料理や食材は出力しない
 - 同じ料理が続きすぎないようにする
-- 同じ条件でも毎回まったく同じ献立にならないよう、一般的な家庭料理の範囲で少し変化をつける
 `;
 
   let lastError = new Error("AIの献立JSON形式が不正です。");
@@ -255,6 +301,6 @@ export async function generateShoppingList(
   familySize: number,
 ): Promise<ShoppingListJson> {
   const parsed = shoppingListSchema.safeParse(buildShoppingListFromPlan(plan, familySize));
-  if (!parsed.success) throw new Error("AIの買い物リストJSON形式が不正です。");
+  if (!parsed.success) throw new Error("AIの食材リストJSON形式が不正です。");
   return parsed.data;
 }

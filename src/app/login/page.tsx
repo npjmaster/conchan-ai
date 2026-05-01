@@ -43,7 +43,9 @@ export default function LoginPage() {
             <input name="password" required type="password" />
           </label>
           {error && <p className="message">{error}</p>}
-          <SubmitButton pending={pending}>ログインする</SubmitButton>
+          <SubmitButton pending={pending} pendingText="ログイン中">
+            ログインする
+          </SubmitButton>
         </form>
       </section>
     </main>

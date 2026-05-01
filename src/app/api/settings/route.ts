@@ -5,15 +5,15 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
-  familySize: z.number().int().min(1).max(10),
+  familySize: z.number().int().min(1).max(100),
   mainDishCount: z.number().int().min(1).max(3),
-  sideDishCount: z.number().int().min(0).max(5),
+  sideDishCount: z.number().int().min(0).max(10),
   breakfastMainDishCount: z.number().int().min(0).max(3),
-  breakfastSideDishCount: z.number().int().min(0).max(5),
+  breakfastSideDishCount: z.number().int().min(0).max(10),
   lunchMainDishCount: z.number().int().min(0).max(3),
-  lunchSideDishCount: z.number().int().min(0).max(5),
+  lunchSideDishCount: z.number().int().min(0).max(10),
   dinnerMainDishCount: z.number().int().min(0).max(3),
-  dinnerSideDishCount: z.number().int().min(0).max(5),
+  dinnerSideDishCount: z.number().int().min(0).max(10),
   includeBreakfast: z.boolean(),
   includeLunch: z.boolean(),
   includeDinner: z.boolean(),

@@ -17,35 +17,37 @@ const categoryOrder = [
   "卵類",
   "野菜",
   "きのこ類",
-  "豆類・豆製品",
+  "豆・豆製品",
   "海藻類",
-  "種実類",
-  "果物",
+  "米・麺",
+  "その他",
+  "調味料",
 ];
 
 function normalizeCategory(item: Item) {
   const category = item.category;
   const name = item.name;
 
+  if (category === "調味料") return "調味料";
   if (category === "肉類" || category === "肉・魚") {
-    if (/[魚鮭鯖さばサバまぐろツナえび海老いかイカたこタコ貝]/.test(name)) return "魚介類";
+    if (/[魚鮭鯖さばサバまぐろマグロツナえび海老いかイカたこタコ貝]/.test(name)) return "魚介類";
     return "肉類";
   }
   if (category === "魚介類") return "魚介類";
+  if (category === "卵類") return "卵類";
+  if (category === "豆・豆製品") return "豆・豆製品";
   if (category === "大豆・卵") {
     if (name.includes("卵") || name.includes("玉子")) return "卵類";
-    return "豆類・豆製品";
+    return "豆・豆製品";
   }
-  if (category === "卵類") return "卵類";
-  if (category === "豆類・豆製品") return "豆類・豆製品";
   if (category === "乾物" && /わかめ|昆布|ひじき|海苔|のり/.test(name)) return "海藻類";
   if (category === "海藻類") return "海藻類";
-  if (category === "野菜" && /きのこ|しめじ|えのき|しいたけ|椎茸|まいたけ|エリンギ/.test(name)) return "きのこ類";
+  if (category === "野菜" && /きのこ|しめじ|えのき|しいたけ|椎茸|まいたけ|舞茸|エリンギ/.test(name)) return "きのこ類";
   if (category === "きのこ類") return "きのこ類";
-  if (category === "種実類") return "種実類";
+  if (category === "米・麺") return "米・麺";
   if (category === "果物") return "果物";
   if (category === "野菜") return "野菜";
-  return category;
+  return category || "その他";
 }
 
 function compareCategories(a: string, b: string) {

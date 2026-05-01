@@ -129,14 +129,13 @@ button.primary {
   line-height: 1.5;
 }
 
-.panel-button-primary {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: var(--primary-dark);
-}
-
 .container {
   padding: 28px 0 56px;
+}
+
+.page-actions,
+.result-section {
+  margin-top: 20px;
 }
 
 .hero {
@@ -192,6 +191,12 @@ button.primary {
 
 .panel.soft {
   background: var(--surface-soft);
+}
+
+.panel.panel-button-primary {
+  border-color: var(--primary);
+  background: var(--surface);
+  color: var(--primary-dark);
 }
 
 .panel h2,
@@ -313,20 +318,42 @@ input:disabled {
 }
 
 @media (max-width: 640px) {
+  .topbar-inner,
+  .container {
+    width: min(100% - 20px, 980px);
+  }
+
   .topbar-inner {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 12px 0;
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: flex-start;
+    min-height: 58px;
+    padding: 8px 0;
+  }
+
+  .brand {
+    flex: 0 0 96px;
+    width: 96px;
   }
 
   .nav {
-    justify-content: flex-start;
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    justify-content: stretch;
   }
 
   .nav a,
   .nav button {
-    min-height: 38px;
-    padding: 8px 10px;
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 34px;
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 0.82rem;
   }
 
   .meal-count-grid {

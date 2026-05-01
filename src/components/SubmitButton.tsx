@@ -3,13 +3,15 @@
 export function SubmitButton({
   children,
   pending,
+  pendingText = "処理中...",
 }: {
   children: React.ReactNode;
   pending: boolean;
+  pendingText?: string;
 }) {
   return (
     <button className="primary" disabled={pending} type="submit">
-      {pending ? "生成中..." : children}
+      {pending ? pendingText : children}
     </button>
   );
 }

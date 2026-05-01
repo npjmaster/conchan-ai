@@ -6,9 +6,9 @@ import { prisma } from "@/lib/prisma";
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  familySize: z.number().int().min(1).max(10).default(2),
+  familySize: z.number().int().min(1).max(100).default(2),
   mainDishCount: z.number().int().min(1).max(3).default(1),
-  sideDishCount: z.number().int().min(0).max(5).default(1),
+  sideDishCount: z.number().int().min(0).max(10).default(1),
   lowSalt: z.boolean().default(false),
   lowSugar: z.boolean().default(false),
   lowFat: z.boolean().default(false),

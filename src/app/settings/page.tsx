@@ -3,16 +3,18 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { SubmitButton } from "@/components/SubmitButton";
 
+type NumericValue = number | "";
+
 type Setting = {
-  familySize: number;
-  mainDishCount: number;
-  sideDishCount: number;
-  breakfastMainDishCount: number;
-  breakfastSideDishCount: number;
-  lunchMainDishCount: number;
-  lunchSideDishCount: number;
-  dinnerMainDishCount: number;
-  dinnerSideDishCount: number;
+  familySize: NumericValue;
+  mainDishCount: NumericValue;
+  sideDishCount: NumericValue;
+  breakfastMainDishCount: NumericValue;
+  breakfastSideDishCount: NumericValue;
+  lunchMainDishCount: NumericValue;
+  lunchSideDishCount: NumericValue;
+  dinnerMainDishCount: NumericValue;
+  dinnerSideDishCount: NumericValue;
   includeBreakfast: boolean;
   includeLunch: boolean;
   includeDinner: boolean;
@@ -40,6 +42,10 @@ const defaultSetting: Setting = {
   lowSugar: false,
   lowFat: false,
 };
+
+function numberOrDefault(value: NumericValue, fallback: number) {
+  return value === "" ? fallback : value;
+}
 
 export default function SettingsPage() {
   const [setting, setSetting] = useState<Setting>(defaultSetting);
@@ -83,16 +89,29 @@ export default function SettingsPage() {
     setPending(true);
     setError("");
     setMessage("");
-    const payload: Setting = {
+    const payload = {
       ...setting,
-      mainDishCount: setting.mainDishCount,
-      sideDishCount: setting.sideDishCount,
-      breakfastMainDishCount: mealEnabledRef.current.breakfast ? setting.breakfastMainDishCount : 0,
-      breakfastSideDishCount: mealEnabledRef.current.breakfast ? setting.breakfastSideDishCount : 0,
-      lunchMainDishCount: mealEnabledRef.current.lunch ? setting.lunchMainDishCount : 0,
-      lunchSideDishCount: mealEnabledRef.current.lunch ? setting.lunchSideDishCount : 0,
-      dinnerMainDishCount: mealEnabledRef.current.dinner ? setting.dinnerMainDishCount : 0,
-      dinnerSideDishCount: mealEnabledRef.current.dinner ? setting.dinnerSideDishCount : 0,
+      familySize: numberOrDefault(setting.familySize, 1),
+      mainDishCount: numberOrDefault(setting.mainDishCount, 1),
+      sideDishCount: numberOrDefault(setting.sideDishCount, 0),
+      breakfastMainDishCount: mealEnabledRef.current.breakfast
+        ? numberOrDefault(setting.breakfastMainDishCount, 0)
+        : 0,
+      breakfastSideDishCount: mealEnabledRef.current.breakfast
+        ? numberOrDefault(setting.breakfastSideDishCount, 0)
+        : 0,
+      lunchMainDishCount: mealEnabledRef.current.lunch
+        ? numberOrDefault(setting.lunchMainDishCount, 0)
+        : 0,
+      lunchSideDishCount: mealEnabledRef.current.lunch
+        ? numberOrDefault(setting.lunchSideDishCount, 0)
+        : 0,
+      dinnerMainDishCount: mealEnabledRef.current.dinner
+        ? numberOrDefault(setting.dinnerMainDishCount, 0)
+        : 0,
+      dinnerSideDishCount: mealEnabledRef.current.dinner
+        ? numberOrDefault(setting.dinnerSideDishCount, 0)
+        : 0,
       includeBreakfast: mealEnabledRef.current.breakfast,
       includeLunch: mealEnabledRef.current.lunch,
       includeDinner: mealEnabledRef.current.dinner,
@@ -133,10 +152,9 @@ export default function SettingsPage() {
 
   function updateNumber(name: keyof Setting, value: string) {
     editedRef.current = true;
-    const numericValue = Number(value);
     setSetting((current) => ({
       ...current,
-      [name]: Number.isNaN(numericValue) ? 0 : numericValue,
+      [name]: value === "" ? "" : Number(value),
     }));
   }
 
@@ -177,11 +195,11 @@ export default function SettingsPage() {
         <form className="form" onSubmit={onSubmit}>
           <label className="field">
             家族人数
-            <input max={10} min={1} name="familySize" onChange={(event) => updateNumber("familySize", event.currentTarget.value)} type="number" value={setting.familySize} />
+            <input max={100} min={1} name="familySize" onChange={(event) => updateNumber("familySize", event.currentTarget.value)} type="number" value={setting.familySize} />
           </label>
           <div className="checks">
             <span className="label">対象食事</span>
-            <div className="check">
+            <label className="check">
               <input
                 checked={mealEnabled.breakfast}
                 id="includeBreakfast"
@@ -189,9 +207,9 @@ export default function SettingsPage() {
                 onChange={(event) => updateMealEnabled("breakfast", event.currentTarget.checked)}
                 type="checkbox"
               />
-              <span>朝食</span>
-            </div>
-            <div className="check">
+              朝食
+            </label>
+            <label className="check">
               <input
                 checked={mealEnabled.lunch}
                 id="includeLunch"
@@ -199,9 +217,9 @@ export default function SettingsPage() {
                 onChange={(event) => updateMealEnabled("lunch", event.currentTarget.checked)}
                 type="checkbox"
               />
-              <span>昼食</span>
-            </div>
-            <div className="check">
+              昼食
+            </label>
+            <label className="check">
               <input
                 checked={mealEnabled.dinner}
                 id="includeDinner"
@@ -209,8 +227,8 @@ export default function SettingsPage() {
                 onChange={(event) => updateMealEnabled("dinner", event.currentTarget.checked)}
                 type="checkbox"
               />
-              <span>夕食</span>
-            </div>
+              夕食
+            </label>
           </div>
           <div className="meal-count-grid">
             <label className="field">
@@ -219,7 +237,7 @@ export default function SettingsPage() {
             </label>
             <label className="field">
               朝食の副菜数
-              <input disabled={!mealEnabled.breakfast} max={5} min={0} name="breakfastSideDishCount" onChange={(event) => updateNumber("breakfastSideDishCount", event.currentTarget.value)} type="number" value={mealEnabled.breakfast ? setting.breakfastSideDishCount : 0} />
+              <input disabled={!mealEnabled.breakfast} max={10} min={0} name="breakfastSideDishCount" onChange={(event) => updateNumber("breakfastSideDishCount", event.currentTarget.value)} type="number" value={mealEnabled.breakfast ? setting.breakfastSideDishCount : 0} />
             </label>
             <label className="field">
               昼食の主菜数
@@ -227,7 +245,7 @@ export default function SettingsPage() {
             </label>
             <label className="field">
               昼食の副菜数
-              <input disabled={!mealEnabled.lunch} max={5} min={0} name="lunchSideDishCount" onChange={(event) => updateNumber("lunchSideDishCount", event.currentTarget.value)} type="number" value={mealEnabled.lunch ? setting.lunchSideDishCount : 0} />
+              <input disabled={!mealEnabled.lunch} max={10} min={0} name="lunchSideDishCount" onChange={(event) => updateNumber("lunchSideDishCount", event.currentTarget.value)} type="number" value={mealEnabled.lunch ? setting.lunchSideDishCount : 0} />
             </label>
             <label className="field">
               夕食の主菜数
@@ -235,31 +253,33 @@ export default function SettingsPage() {
             </label>
             <label className="field">
               夕食の副菜数
-              <input disabled={!mealEnabled.dinner} max={5} min={0} name="dinnerSideDishCount" onChange={(event) => updateNumber("dinnerSideDishCount", event.currentTarget.value)} type="number" value={mealEnabled.dinner ? setting.dinnerSideDishCount : 0} />
+              <input disabled={!mealEnabled.dinner} max={10} min={0} name="dinnerSideDishCount" onChange={(event) => updateNumber("dinnerSideDishCount", event.currentTarget.value)} type="number" value={mealEnabled.dinner ? setting.dinnerSideDishCount : 0} />
             </label>
           </div>
           <div className="checks">
             <span className="label">健康オプション</span>
-            <div className="check">
+            <label className="check">
               <input checked={setting.lowSalt} id="lowSalt" name="lowSalt" onChange={(event) => updateSetting({ lowSalt: event.currentTarget.checked })} type="checkbox" />
-              <span>減塩</span>
-            </div>
-            <div className="check">
+              減塩
+            </label>
+            <label className="check">
               <input checked={setting.lowSugar} id="lowSugar" name="lowSugar" onChange={(event) => updateSetting({ lowSugar: event.currentTarget.checked })} type="checkbox" />
-              <span>糖質控えめ</span>
-            </div>
-            <div className="check">
+              糖質控えめ
+            </label>
+            <label className="check">
               <input checked={setting.lowFat} id="lowFat" name="lowFat" onChange={(event) => updateSetting({ lowFat: event.currentTarget.checked })} type="checkbox" />
-              <span>脂質控えめ</span>
-            </div>
+              脂質控えめ
+            </label>
           </div>
           <label className="field">
             アレルギー・避けたい食材
-            <input name="allergies" onChange={(event) => updateSetting({ allergies: event.currentTarget.value })} placeholder="例：えび、そば、卵" type="text" value={setting.allergies} />
+            <input name="allergies" onChange={(event) => updateSetting({ allergies: event.currentTarget.value })} placeholder="例：えび、そば、牛乳" type="text" value={setting.allergies} />
           </label>
           {error && <p className="message">{error}</p>}
           {message && <p className="success">{message}</p>}
-          <SubmitButton pending={pending}>保存する</SubmitButton>
+          <SubmitButton pending={pending} pendingText="登録中">
+            保存する
+          </SubmitButton>
         </form>
       </section>
     </main>

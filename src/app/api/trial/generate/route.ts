@@ -5,9 +5,9 @@ import { currentDateOnly } from "@/lib/date";
 import { buildRecipeLinks } from "@/lib/recipeLinks";
 
 const schema = z.object({
-  familySize: z.number().int().min(1).max(10).default(2),
+  familySize: z.number().int().min(1).max(100).default(2),
   mainDishCount: z.number().int().min(1).max(3).default(1),
-  sideDishCount: z.number().int().min(0).max(5).default(1),
+  sideDishCount: z.number().int().min(0).max(10).default(1),
   allergies: z.string().max(200).default(""),
   lowSalt: z.boolean().default(false),
   lowSugar: z.boolean().default(false),
@@ -15,10 +15,10 @@ const schema = z.object({
 });
 
 function generationErrorMessage(error: unknown) {
-  if (!(error instanceof Error)) return "生成に失敗しました。";
+  if (!(error instanceof Error)) return "献立作成に失敗しました。";
   if (error.message === "AI機能が未設定です。") return error.message;
   if (error.message.includes("JSON")) return error.message;
-  return "生成に失敗しました。";
+  return "献立作成に失敗しました。";
 }
 
 export async function POST(request: Request) {

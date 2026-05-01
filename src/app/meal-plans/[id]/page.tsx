@@ -32,17 +32,17 @@ export default async function MealPlanPage({ params }: { params: Promise<{ id: s
 
   return (
     <main className="container">
-      <h1 className="page-title">献立生成結果</h1>
+      <h1 className="page-title">おすすめの献立</h1>
       <p className="lead">
         {formatDateOnly(mealPlan.startDate)} から {mealPlan.days}日分
       </p>
-      <section style={{ marginTop: 20 }}>
+      <section className="result-section">
         <h2>献立</h2>
         <MealPlanView mealPlan={mealPlan} />
       </section>
       {shoppingList && (
-        <section style={{ marginTop: 24 }}>
-          <h2>買い物リスト</h2>
+        <section className="result-section">
+          <h2>食材リスト</h2>
           <ShoppingListView items={shoppingList.items} shoppingListId={shoppingList.id} />
         </section>
       )}

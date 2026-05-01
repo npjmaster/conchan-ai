@@ -18,10 +18,10 @@ export default async function DashboardPage() {
   return (
     <main className="container">
       <h1 className="page-title">マイページ</h1>
-      <p className="lead">設定を整えて、最大7日分の献立と買い物リストを作れます。</p>
-      <div className="actions" style={{ margin: "18px 0" }}>
+      <p className="lead">最大7日分の献立を考えます。ユーザー設定でカスタマイズができます。</p>
+      <div className="actions page-actions">
         <Link className="button primary" href="/generate">
-          献立を生成する
+          献立をご提案
         </Link>
         <Link className="button" href="/settings">
           ユーザー設定
