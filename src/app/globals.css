@@ -234,6 +234,18 @@ input {
   font: inherit;
 }
 
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 12px;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+}
+
 input:disabled {
   background: #f2eee8;
   color: #8a8178;
@@ -273,6 +285,18 @@ input:disabled {
   gap: 12px;
 }
 
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
 .dish-list {
   margin: 8px 0 0;
   padding-left: 18px;
@@ -291,6 +315,77 @@ input:disabled {
   padding: 7px 10px;
   background: var(--surface-soft);
   font-size: 0.9rem;
+}
+
+.editable-dish-list {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 14px;
+}
+
+.editable-dish {
+  display: grid;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+}
+
+.editable-dish:last-child {
+  border-bottom: 0;
+}
+
+.dish-title {
+  color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dish-editor-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.dish-editor-panel summary {
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 7px 10px;
+}
+
+.dish-editor-panel[open] {
+  border-left: 3px solid var(--line);
+  padding-left: 12px;
+}
+
+.dish-editor-panel[open] summary {
+  margin-bottom: 10px;
+}
+
+.ingredient-text {
+  margin: 8px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 10px 12px;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.export-actions {
+  margin: 0 0 12px;
+}
+
+.section-bottom-actions {
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 .shopping-item {
@@ -358,5 +453,10 @@ input:disabled {
 
   .meal-count-grid {
     grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

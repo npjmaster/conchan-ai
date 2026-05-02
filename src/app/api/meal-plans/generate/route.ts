@@ -5,6 +5,7 @@ import { z } from "zod";
 import { generateMealPlan, generateShoppingList } from "@/lib/ai";
 import { authOptions } from "@/lib/auth";
 import { compareMealTypes, parseDateOnly } from "@/lib/date";
+import { ingredientTextFromItems } from "@/lib/ingredients";
 import { prisma } from "@/lib/prisma";
 import { buildRecipeLinks } from "@/lib/recipeLinks";
 
@@ -104,11 +105,13 @@ export async function POST(request: Request) {
                   ...meal.main.map((dish) => ({
                     dishType: "main",
                     name: dish.name,
+                    description: ingredientTextFromItems(dish.ingredients),
                     recipeLinks: { create: buildRecipeLinks(dish.name) },
                   })),
                   ...meal.sides.map((dish) => ({
                     dishType: "side",
                     name: dish.name,
+                    description: ingredientTextFromItems(dish.ingredients),
                     recipeLinks: { create: buildRecipeLinks(dish.name) },
                   })),
                 ],

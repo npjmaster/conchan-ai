@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { normalizeShoppingCategory } from "@/lib/ingredients";
 
 type Item = {
   id?: string;
@@ -11,49 +12,30 @@ type Item = {
   checked?: boolean;
 };
 
-const condimentCategory = "調味料";
-
 const categoryOrder = [
   "肉類",
   "魚介類",
   "卵類",
   "野菜",
   "きのこ類",
-  "豆・豆製品",
+  "豆腐・豆製品",
   "海藻類",
   "米・麺",
+  "果物",
+  "種実類",
+  "油",
+  "粉類",
   "その他",
+  "調味料",
 ];
 
 function normalizeCategory(item: Item) {
-  const category = item.category;
-  const name = item.name;
-
-  if (category === condimentCategory || category.includes("調味")) return condimentCategory;
-  if (category === "肉類" || category === "肉・魚") {
-    if (/[魚鮭鯖さばサバまぐろマグロツナえび海老いかイカたこタコ貝]/.test(name)) return "魚介類";
-    return "肉類";
-  }
-  if (category === "魚介類") return "魚介類";
-  if (category === "卵類") return "卵類";
-  if (category === "豆・豆製品") return "豆・豆製品";
-  if (category === "大豆・卵") {
-    if (name.includes("卵") || name.includes("玉子")) return "卵類";
-    return "豆・豆製品";
-  }
-  if (category === "乾物" && /わかめ|昆布|ひじき|海苔|のり/.test(name)) return "海藻類";
-  if (category === "海藻類") return "海藻類";
-  if (category === "野菜" && /きのこ|しめじ|えのき|しいたけ|椎茸|まいたけ|舞茸|エリンギ/.test(name)) return "きのこ類";
-  if (category === "きのこ類") return "きのこ類";
-  if (category === "米・麺") return "米・麺";
-  if (category === "果物") return "果物";
-  if (category === "野菜") return "野菜";
-  return category || "その他";
+  return normalizeShoppingCategory({ name: item.name, category: item.category });
 }
 
 function compareCategories(a: string, b: string) {
-  if (a === condimentCategory && b !== condimentCategory) return 1;
-  if (b === condimentCategory && a !== condimentCategory) return -1;
+  if (a === "調味料" && b !== "調味料") return 1;
+  if (b === "調味料" && a !== "調味料") return -1;
 
   const aIndex = categoryOrder.indexOf(a);
   const bIndex = categoryOrder.indexOf(b);
@@ -63,6 +45,16 @@ function compareCategories(a: string, b: string) {
     return aIndex - bIndex;
   }
   return a.localeCompare(b, "ja");
+}
+
+function displayAmount(item: Item) {
+  if (["油", "粉類", "調味料"].includes(normalizeCategory(item))) return "";
+  return [item.amount, item.unit].filter(Boolean).join("");
+}
+
+function displayName(item: Item) {
+  if (normalizeCategory(item) === "油" && item.name === "油") return "オリーブオイル";
+  return item.name;
 }
 
 export function ShoppingListView({
@@ -76,6 +68,10 @@ export function ShoppingListView({
     Object.fromEntries(items.map((item) => [item.id ?? item.name, Boolean(item.checked)])),
   );
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setCheckedItems(Object.fromEntries(items.map((item) => [item.id ?? item.name, Boolean(item.checked)])));
+  }, [items]);
 
   async function onCheck(item: Item, checked: boolean) {
     const key = item.id ?? item.name;
@@ -105,16 +101,55 @@ export function ShoppingListView({
     return acc;
   }, {});
   const sortedGroups = Object.entries(groups).sort(([a], [b]) => compareCategories(a, b));
+  const sortedItems = sortedGroups.flatMap(([category, categoryItems]) =>
+    categoryItems
+      .toSorted((a, b) => a.name.localeCompare(b.name, "ja"))
+      .map((item) => ({ ...item, name: displayName({ ...item, category }), category, amount: displayAmount({ ...item, category }), unit: "" })),
+  );
+
+  function exportFile(format: "csv" | "txt") {
+    const content =
+      format === "csv"
+        ? [
+            "category,name,amount,unit",
+            ...sortedItems.map((item) =>
+              [item.category, item.name, item.amount ?? "", item.unit ?? ""]
+                .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+                .join(","),
+            ),
+          ].join("\n")
+        : sortedItems
+            .map((item) => [item.category, item.name, [item.amount, item.unit].filter(Boolean).join("")].filter(Boolean).join("\t"))
+            .join("\n");
+    const blob = new Blob([format === "csv" ? `\uFEFF${content}` : content], {
+      type: format === "csv" ? "text/csv;charset=utf-8" : "text/plain;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `shopping-list.${format}`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <>
       {error && <p className="message">{error}</p>}
+      <div className="actions export-actions">
+        <button onClick={() => exportFile("csv")} type="button">
+          CSV出力
+        </button>
+        <button onClick={() => exportFile("txt")} type="button">
+          TXT出力
+        </button>
+      </div>
       <div className="grid">
         {sortedGroups.map(([category, categoryItems]) => (
           <section className="shopping-section" key={category}>
             <h3>{category}</h3>
             {categoryItems.toSorted((a, b) => a.name.localeCompare(b.name, "ja")).map((item) => {
               const key = item.id ?? item.name;
+              const amount = displayAmount({ ...item, category });
               return (
                 <label className="shopping-item" key={key}>
                   <input
@@ -122,10 +157,8 @@ export function ShoppingListView({
                     onChange={(event) => void onCheck(item, event.currentTarget.checked)}
                     type="checkbox"
                   />
-                  <span>{item.name}</span>
-                  <span className="badge">
-                    {[item.amount, item.unit].filter(Boolean).join("") || "分量なし"}
-                  </span>
+                  <span>{displayName({ ...item, category })}</span>
+                  <span className="badge">{amount || "分量なし"}</span>
                 </label>
               );
             })}

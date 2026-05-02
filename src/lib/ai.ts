@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { addDays, mealTypeOrder } from "./date";
+import { aggregateShoppingItems } from "./ingredients";
 import type { GenerateInput, MealPlanJson, ShoppingItem, ShoppingListJson } from "./types";
 
 const shoppingItemSchema = z.object({
@@ -218,6 +219,7 @@ function ingredientsFromDishName(dishName: string, familySize: number) {
 
 function buildShoppingListFromPlan(plan: MealPlanJson, familySize: number): ShoppingListJson {
   const items = new Map<string, ShoppingItem>();
+  const collectedItems: ShoppingItem[] = [];
   const add = (item: ShoppingItem) => {
     const normalized = isCondiment(item)
       ? { ...item, category: "調味料", amount: undefined, unit: undefined }
@@ -236,16 +238,13 @@ function buildShoppingListFromPlan(plan: MealPlanJson, familySize: number): Shop
     for (const meal of day.meals) {
       for (const dish of [...meal.main, ...meal.sides]) {
         for (const item of dish.ingredients?.length ? dish.ingredients : ingredientsFromDishName(dish.name, familySize)) {
-          add(item);
-        }
-        for (const item of condimentsFromDishName(dish.name)) {
-          add(item);
+          collectedItems.push(item);
         }
       }
     }
   }
 
-  return normalizeShoppingList({ shopping_list: Array.from(items.values()) });
+  return normalizeShoppingList({ shopping_list: aggregateShoppingItems(collectedItems) });
 }
 
 export async function generateMealPlan(input: GenerateInput): Promise<MealPlanJson> {

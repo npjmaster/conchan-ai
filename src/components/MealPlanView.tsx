@@ -1,19 +1,20 @@
 import { compareMealTypes, formatDateOnly } from "@/lib/date";
 
-type RecipeLink = {
+export type RecipeLink = {
   id?: string;
   serviceName: string;
   searchUrl: string;
 };
 
-type Dish = {
+export type Dish = {
   id?: string;
   dishType?: string;
   name: string;
+  description?: string | null;
   recipeLinks?: RecipeLink[];
 };
 
-type Meal = {
+export type Meal = {
   id?: string;
   mealDate?: string | Date;
   mealType?: string;
@@ -23,7 +24,7 @@ type Meal = {
   sides?: Dish[];
 };
 
-type Day = {
+export type Day = {
   date: string;
   meals: Meal[];
 };
@@ -34,7 +35,7 @@ const mealLabels: Record<string, string> = {
   dinner: "夕食",
 };
 
-function normalizeFromApi(mealPlan: {
+export function normalizeFromApi(mealPlan: {
   meals?: Meal[];
   meal_plan?: Day[];
 }): Day[] {
@@ -56,7 +57,7 @@ function normalizeFromApi(mealPlan: {
   }));
 }
 
-function linksFor(dish: Dish): RecipeLink[] {
+export function linksFor(dish: Dish): RecipeLink[] {
   if (dish.recipeLinks?.length) return dish.recipeLinks;
   return [
     {
@@ -94,6 +95,7 @@ export function MealPlanView({ mealPlan }: { mealPlan: { meals?: Meal[]; meal_pl
                           </a>
                         ))}
                       </div>
+                      {dish.description && <pre className="ingredient-text">{dish.description}</pre>}
                     </li>
                   ))}
                 </ul>
@@ -109,6 +111,7 @@ export function MealPlanView({ mealPlan }: { mealPlan: { meals?: Meal[]; meal_pl
                           </a>
                         ))}
                       </div>
+                      {dish.description && <pre className="ingredient-text">{dish.description}</pre>}
                     </li>
                   ))}
                 </ul>

@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { MealPlanView } from "@/components/MealPlanView";
-import { ShoppingListView } from "@/components/ShoppingListView";
+import { MealPlanEditor } from "@/components/MealPlanEditor";
 import { authOptions } from "@/lib/auth";
 import { compareMealTypes, formatDateOnly } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
@@ -29,23 +28,20 @@ export default async function MealPlanPage({ params }: { params: Promise<{ id: s
       compareMealTypes(a.mealType, b.mealType),
   );
   const shoppingList = mealPlan.shoppingLists[0];
+  const setting = await prisma.userSetting.findUnique({ where: { userId: session.user.id } });
 
   return (
     <main className="container">
-      <h1 className="page-title">おすすめの献立</h1>
+      <h1 className="page-title">おすすめ献立</h1>
       <p className="lead">
         {formatDateOnly(mealPlan.startDate)} から {mealPlan.days}日分
       </p>
-      <section className="result-section">
-        <h2>献立</h2>
-        <MealPlanView mealPlan={mealPlan} />
-      </section>
-      {shoppingList && (
-        <section className="result-section">
-          <h2>食材リスト</h2>
-          <ShoppingListView items={shoppingList.items} shoppingListId={shoppingList.id} />
-        </section>
-      )}
+      <MealPlanEditor
+        familySize={setting?.familySize ?? 2}
+        initialItems={shoppingList?.items ?? []}
+        mealPlan={mealPlan}
+        shoppingListId={shoppingList?.id}
+      />
     </main>
   );
 }
